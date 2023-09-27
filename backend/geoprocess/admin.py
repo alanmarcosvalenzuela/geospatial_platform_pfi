@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import GeoProcess, Report
 
-# Register your models here.
+admin.site.register(GeoProcess)
+admin.site.register(Report)
