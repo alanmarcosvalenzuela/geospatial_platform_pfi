@@ -1,0 +1,51 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+/* boostrap form style */
+
+.form-inline {
+  width: 100%;
+}
+
+.form-group {
+  width: 90%;
+}
+
+.input-group {
+  width: 90% !important;
+}
+
+.form-control {
+  width: 80% !important;
+}
+
+span.input-group-addon {
+  width: 50px !important;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5%;
+}
+
+
+.no-link-style {
+  color: inherit;
+  text-decoration: none;
+  /* Puedes agregar más estilos aquí si es necesario */
+}
+
+.app-container {
+  min-height: 100vh; /* Establece la altura mínima como el 100% del viewport (altura de la ventana del navegador) */
+  display: flex;
+  flex-direction: column; /* Organiza los elementos verticalmente */
+  justify-content: stretch; /* Alinea los elementos para que ocupen toda la altura disponible */
+}
