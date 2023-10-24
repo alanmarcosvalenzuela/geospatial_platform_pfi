@@ -39,6 +39,7 @@ class UserReportsAPIView(APIView):
 
 
 class ReportDownloadView(APIView):
+    permission_classes = (permissions.AllowAny,)
     def get(self, request, report_id, format=None):
         try:
             report = Report.objects.get(pk=report_id)
