@@ -120,7 +120,7 @@ function App() {
           <Container>
             <Navbar.Brand>
               <Link to="/" className="nav-link btn btn-light me-2">
-                Plataforma de Geoprocesamiento
+                Plataforma Terradata
               </Link>
             </Navbar.Brand>
             <Navbar.Toggle />
