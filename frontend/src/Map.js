@@ -177,9 +177,8 @@ const Home = ({ userEmail }) => {
                 value="agua"
                 checked={selectedOption === 'agua'}
                 onChange={() => setSelectedOption('agua')}
-                disabled
               />
-              Agua (en desarrollo)
+              Agua
             </label>
             <label>
               <input
@@ -187,9 +186,8 @@ const Home = ({ userEmail }) => {
                 value="vegetacion"
                 checked={selectedOption === 'vegetacion'}
                 onChange={() => setSelectedOption('vegetacion')}
-                disabled
               />
-              Vegetación (en desarrollo)
+              Vegetación
             </label>
             <label>
               <input

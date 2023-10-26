@@ -15,6 +15,10 @@ from rest_framework.views import APIView
 from samgeo import tms_to_geotiff
 from samgeo.text_sam import LangSAM
 from user_api.models import AppUser
+from gee.authenticate_gee import ee
+import geemap
+from datetime import date, timedelta
+
 
 from .models import GeoProcess, Report
 
@@ -71,6 +75,10 @@ class Process(APIView):
     permission_classes = (permissions.AllowAny,)
     authentication_classes = ()
 
+    def gee_ndvi(self):
+
+        pass
+
 
     def send_email(self, email, report_pdf_path, title_file, description_file):
         
@@ -109,12 +117,12 @@ class Process(APIView):
         # Create the desired format
         bbox_formatted = [xmin, ymin, xmax, ymax]
 
-        image = "Image.tif"
-        tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
-
-        sam = LangSAM()
 
         if option == "arboles":
+            image = "Image.tif"
+            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
+            sam = LangSAM()
+
             sam.predict(image, 'tree', box_threshold=0.22, text_threshold=0.22)
             output_file = 'arboles.tif'
             title_file = 'Segmentación Automática de Zonas Verdes'
@@ -125,6 +133,10 @@ class Process(APIView):
                 title='',
                 output=output_file)
         elif option == "piletas":
+            image = "Image.tif"
+            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
+            sam = LangSAM()
+
             sam.predict(image, 'swimming pool', box_threshold=0.23, text_threshold=0.23)
             output_file = 'pools.tif'
             title_file = 'Segmentación Automática de Piletas'
@@ -135,6 +147,10 @@ class Process(APIView):
                 title='',
                 output=output_file)
         elif option == "construcciones_sam":
+            image = "Image.tif"
+            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
+            sam = LangSAM()
+
             sam.predict(image, 'ceiling', box_threshold=0.20, text_threshold=0.20)
             output_file = 'ceilings.tif'
             title_file = 'Segmentación Automática de Construcciones'
@@ -144,6 +160,73 @@ class Process(APIView):
                 box_color='red',
                 title='',
                 output=output_file)
+        elif option == "agua":
+            output_file = 'water.tif'
+            title_file = 'Índices de Clasificación de Volumen de Agua'
+            description_file = 'Reporte describiendo los resultados del índice de masa de agua.'
+
+            today = date.today()
+            yesterday = today - timedelta(days=1)
+            six_months_ago = today - timedelta(days=180)
+
+            bbox = ee.Geometry.Rectangle(bbox_formatted)
+
+            # Date format
+            start_date = six_months_ago.strftime('%Y-%m-%d')
+            end_date = yesterday.strftime('%Y-%m-%d')
+        
+            # Filter image collection
+            imgs_s2 = ee.ImageCollection('COPERNICUS/S2') \
+                .filterDate(start_date, end_date) \
+                .filterBounds(bbox) \
+                .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
+
+            # Select image
+            img = imgs_s2.sort('system:time_start').first()
+
+            # Clip the image
+            s2_clip = img.clip(bbox)
+
+            # Calculate NDWI
+            ndwi = s2_clip.normalizedDifference(['B3', 'B8'])
+
+            # Export the image as a TIFF file
+            geemap.ee_export_image(ndwi.visualize(min=-0.5, max=1, palette=['FFFFFF','0000FF']), filename=output_file, scale=10, region=bbox, file_per_band=False)
+        elif option == "vegetacion":
+            output_file = 'ndvi.tif'
+            title_file = 'Índices de Clasificación de Vegetación'
+            description_file = 'Reporte describiendo los resultados del índice de vegetación.'
+
+            today = date.today()
+            yesterday = today - timedelta(days=1)
+            six_months_ago = today - timedelta(days=180)
+
+            bbox = ee.Geometry.Rectangle(bbox_formatted)
+
+            # Date format
+            start_date = six_months_ago.strftime('%Y-%m-%d')
+            end_date = yesterday.strftime('%Y-%m-%d')
+        
+            # Filter image collection
+            imgs_s2 = ee.ImageCollection('COPERNICUS/S2') \
+                .filterDate(start_date, end_date) \
+                .filterBounds(bbox) \
+                .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
+
+            # Select image
+            img = imgs_s2.sort('system:time_start').first()
+
+            # Clip the image
+            s2_clip = img.clip(bbox)
+
+            # Calculate NDVI
+            ndvi = s2_clip.expression("(nir-red)/(nir+red)", {
+                "nir": s2_clip.select("B8"),
+                "red": s2_clip.select("B3")
+            })
+
+            # Export the image as a TIFF file
+            geemap.ee_export_image(ndvi.visualize(min=0, max=0.5, palette=['FFFFFF', 'CE7E45', 'DF923D', 'F18555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']), filename=output_file, scale=10, region=bbox, file_per_band=False)
         else:
             # Handle an invalid option here if needed
             print("Funcionalidades de GEE en desarrollo")

@@ -4,3 +4,7 @@ __pycache__
 node_modules
 package-lock.json
 backend/media/reports/*.tif
+backend/media/reports/*.pdf
+backend/*.tif
+backend/*.pdf
+backend/*.xml

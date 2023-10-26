@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "terradata-403013",
+  "private_key_id": "a66ecf63e05985e48a446633d660167cfc66a33a",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDfGUCSM/4n66EE\nm1N2/siQURvh0FHGa76VxFRrixu/MOu/9aLVuY6yBm1o6cMU7htp82sS0pKeJ+2Z\nHrfndOVOKL2UZKsA+aHPPNVVKHXm+qSZ5XIsCxRpRxsiCWADUIb1Ph2BbetKzwjI\nw+Ts0r018+cStVXtIdYzJUWwlWUq8UadZsASCxPpsdiwb71OGRRzK8VCXCJuO8zr\nfmgPfy3NqP1i4cTUOTNDU5ttNd9fFgR4rJcKIWZJVuIF3Aqms/9Oo/wpXpz7WnrT\ng1kcbuKYpx+P1pQJFb/2/N4CJn+Jt2CFkwrF9RoXcfTart6qcUggKuPzySQQeHqx\nCNFTlzBLAgMBAAECggEAXuLNGUGew5jOY3iyj4Y+hE7S5oBk/1i89tLJOvIvy2nB\nouOUrYTdoW7lYr0leQXqR+49KITB0h1WSw0LF5ianFrsgqwsJN6HSO5tJ2ptdt88\nWa4CGKRfuoUBD8FgAhjiRXT1NKKs86TJbiYO/ACHc+Z37XeNg60j/p3IHZn0rMWk\n2Zy8i5F2vkfJWZufm7SEaYdoOMOr2q1R5iXxkTBfSWyQOGG922zL2Z34OgWoVR+C\nlg3lTQN9vzH2kyx/Ztm6Uqudailzfg10ZHqTd4mhcy8CmdaNyQZohjr54SynEszq\nmkawIkKFzEYlrjtnyfEdagjnmKOyYLNnO+d9nIRPcQKBgQD+rhKzZL+RTiH+w/pC\n60mdIWfZW9JuJTh33bapTsnxhPYAxfp8VAxFkDT60wxVsYHwWlHQzfriWBTs129a\nPdBCbxK3Lq43lKsDx4aVOlT5AJfxIl2dgfFBOBkzy/xnUDfWUO+n39UgQRRHSbMS\nkiOtsqM65Cxffr2R8n0pect9mwKBgQDgQUZfYRQbeW6+vSxrTo2c++cJGcFjS14B\nCSJpO0FbVDaPecvvQmjKIlNOPdn2Ge/VOmdc4v7KarR5lOl9bcUXtR0FuDDkly8R\nfKSVBgsUcf2TsheLIBjSQyTauf3g/rRljb8pHuMpRZWWkLPiMs9f9Xp06W4qklRA\nbdhc/AWbEQKBgQCl0FXyoJytES7G/Xe6DBCwkihX9xWJiwg52otrrhWC/utf04Zj\nXiFjRSGJUNFOFbUg9N0h0ooOxgRRs24XVfl613Ba/bSGEXBKlKSGEiVyvTUv1Q0Y\nWJrnuIuIEr5x0WOZULbIGM5dIqH+S/igFa/PDmiCFj7hqdXo6PUehOK9EwKBgQDa\nPixifnO3GUKx1iD4fYZMFMsPjEUsgRiHIYCfsM82NoqyrvHNc2/P5//y0TbhzvQd\nK62UNEWKcLYa7NUfAEkjfVs1ScArdwaTmh4B+dOmnhkON++5sg718epYA1IUOU0O\n2BgFyM2CSPn/gevOY2x2EsyOIu7X93iPC1fZhlteQQKBgCDaqZj09OyDXMLL2y8o\nG1gprqYRdIJI2gbkXSy1JLSxA9gvmltghpHN8lyEJ5xZNdCbIp21lFoT+TpEiitj\ntJAnk77hJTR8Bkyy7jr+THUC8rIveqZ9fdBscapsDoARbgFMVNnnbrcz5bXLF0zE\nOWqXj1uHEh1bGE/+i23r/KK7\n-----END PRIVATE KEY-----\n",
+  "client_email": "terradata1@terradata-403013.iam.gserviceaccount.com",
+  "client_id": "100189420276618469165",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/terradata1%40terradata-403013.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
