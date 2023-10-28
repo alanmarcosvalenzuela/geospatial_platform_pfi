@@ -182,16 +182,16 @@ class Process(APIView):
                 .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
 
             # Select image
-            img = imgs_s2.sort('system:time_start').first()
+            img = imgs_s2.sort('system:time_start', False).first()
 
             # Clip the image
             s2_clip = img.clip(bbox)
 
             # Calculate NDWI
-            ndwi = s2_clip.normalizedDifference(['B3', 'B8'])
+            ndwi = s2_clip.normalizedDifference(['B3', 'B8']).rename('NDWI')
 
             # Export the image as a TIFF file
-            geemap.ee_export_image(ndwi.visualize(min=-0.5, max=1, palette=['FFFFFF','0000FF']), filename=output_file, scale=10, region=bbox, file_per_band=False)
+            geemap.ee_export_image(ndwi.visualize(palette=['red', 'yellow', 'green', 'cyan', 'blue']), filename=output_file, scale=10, region=bbox, file_per_band=False)
         elif option == "vegetacion":
             output_file = 'ndvi.tif'
             title_file = 'Índices de Clasificación de Vegetación'
@@ -226,7 +226,7 @@ class Process(APIView):
             })
 
             # Export the image as a TIFF file
-            geemap.ee_export_image(ndvi.visualize(min=0, max=0.5, palette=['FFFFFF', 'CE7E45', 'DF923D', 'F18555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']), filename=output_file, scale=10, region=bbox, file_per_band=False)
+            geemap.ee_export_image(ndvi.visualize(min=0, max=1, palette=['FFFFFF', 'CE7E45', 'DF923D', 'F18555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']), filename=output_file, scale=10, region=bbox, file_per_band=False)
         else:
             # Handle an invalid option here if needed
             print("Funcionalidades de GEE en desarrollo")
