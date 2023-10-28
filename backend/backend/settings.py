@@ -91,7 +91,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'terradata',
         'USER': 'terradata',
         'PASSWORD': 'terradata_default_password$',
         'HOST': 'postgres_docker_db',
