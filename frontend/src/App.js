@@ -174,18 +174,18 @@ function App() {
             <Form onSubmit={e => submitRegistration(e)}>
               <Form.Group className="mb-3" controlId="formBasicEmail">
                 <Form.Label>Correo Electrónico</Form.Label>
-                <Form.Control type="email" placeholder="Ingrese su email" value={email} onChange={e => setEmail(e.target.value)} />
+                <Form.Control type="email" placeholder="Ingrese su email" value={email} onChange={e => setEmail(e.target.value)} required />
                 <Form.Text className="text-muted">
                   Nunca compartiremos su correo electrónico con nadie más.
                 </Form.Text>
               </Form.Group>
               <Form.Group className="mb-3" controlId="formBasicUsername">
                 <Form.Label>Usuario</Form.Label>
-                <Form.Control type="text" placeholder="Ingrese su usuario" value={username} onChange={e => setUsername(e.target.value)} />
+                <Form.Control type="text" placeholder="Ingrese su usuario" value={username} onChange={e => setUsername(e.target.value)} required />
               </Form.Group>
               <Form.Group className="mb-3" controlId="formBasicPassword">
                 <Form.Label>Contraseña</Form.Label>
-                <Form.Control type="password" placeholder="Ingrese su contraseña" value={password} onChange={e => setPassword(e.target.value)} />
+                <Form.Control type="password" placeholder="Ingrese su contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
               </Form.Group>
               <Button variant="primary" type="submit">
                 Registrarse
