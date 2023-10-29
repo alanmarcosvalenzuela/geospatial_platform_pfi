@@ -17,7 +17,7 @@ RUN git  clone https://github.com/alanmarcosvalenzuela/geospatial_platform_pfi.g
 
 # Change the working directory to "backend"
 WORKDIR /app/backend
-
+COPY entrypoint.sh .
 
 # Installing python libraries
 RUN pip3 install GDAL==3.6.4

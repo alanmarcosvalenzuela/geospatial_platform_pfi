@@ -1,22 +1,15 @@
 version: '3'
 services:
 
-  build:
-    image: backend
-    command: python manage.py migrate --no-input
-    depends_on:
-      - postgres_docker_db
-
   backend:
     build:
       context: ./backend
     image: backend
     ports:
       - "8000:8000"
-    command: python manage.py runserver
+    command: bash entrypoint.sh
     depends_on:
       - postgres_docker_db
-      - build
 
   postgres_docker_db:
     container_name: postgres_container
