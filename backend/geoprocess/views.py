@@ -1,24 +1,22 @@
 import os
 import threading
-import time
+from datetime import date, datetime, timedelta
 
+import geemap
 from django.conf import settings
 from django.core.files import File
-from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
 from django.http import FileResponse
 from django.urls import reverse
+from gee.authenticate_gee import ee
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from rest_framework import permissions, status
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from samgeo import tms_to_geotiff
 from samgeo.text_sam import LangSAM
 from user_api.models import AppUser
-from gee.authenticate_gee import ee
-import geemap
-from datetime import date, timedelta
-
 
 from .models import GeoProcess, Report
 
@@ -68,17 +66,14 @@ class GeoProcessStatusAPIView(APIView):
             return Response({'message': 'GeoProcess not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+
+
+
+
 
 class Process(APIView):
     permission_classes = (permissions.AllowAny,)
     authentication_classes = ()
-
-    def gee_ndvi(self):
-
-        pass
-
 
     def send_email(self, email, report_pdf_path, title_file, description_file):
         
@@ -93,19 +88,127 @@ class Process(APIView):
         except Exception as e:
             print(e)
 
+    def get_rgb_ndwi(self, color):
+        color_mappings = {
+            "red": (1, 0, 0),
+            "yellow": (1, 1, 0),
+            "green": (0, 1, 0),
+            "cyan": (0, 1, 1),
+            "blue": (0, 0, 1),
+        }
+        return color_mappings.get(color, (0, 0, 0))
+    
+    def get_rgb_ndvi(self, color):
+        color_mappings = {
+            "Rojo": (1, 0, 0),
+            "Amarillo": (1, 1, 0),
+            "Verde": (0, 1, 0),
+            "Nula": (0.8, 0.8, 0.8),
+            "Baja o Escasa": (0.804, 0.522, 0.247),
+            "Con Variabilidad": (1, 1, 0.5),
+            "Media": (0, 1, 0),
+            "Alta": (0.0, 0.502, 0.251),
+        }
+        return color_mappings.get(color, (0, 0, 0))
 
-    def generate_pdf(self, image_path, title, output_path):
-
+    def generate_pdf_index(self, image_path, title, output_path, additional_info, is_ndvi):
         try:
             c = canvas.Canvas(output_path, pagesize=letter)
-            c.setFont("Helvetica", 12)
+            c.setFont("Helvetica-Bold", 16)  # Cambiado a negrita y tamaño aumentado
+            
             # Add centered title
             c.drawCentredString(300, 750, title)
+            
             # Add image
             c.drawImage(image_path, 100, 400, width=400, height=300)
+            
+            # Add references
+            references_title = "Referencias"
+            c.setFont("Helvetica-Bold", 12)  # Cambiado a negrita y tamaño 12
+            c.drawString(100, 350, references_title)  # Posición ajustada con más espacio
+
+            if is_ndvi:
+            
+                meanings = [
+                    "Nula",
+                    "Baja o Escasa",
+                    "Con Variabilidad",
+                    "Media",
+                    "Alta"
+                ]
+                
+                colors = [
+                    self.get_rgb_ndvi("Nula"),
+                    self.get_rgb_ndvi("Baja o Escasa"),
+                    self.get_rgb_ndvi("Con Variabilidad"),
+                    self.get_rgb_ndvi("Media"),
+                    self.get_rgb_ndvi("Alta")
+                ]
+            
+            else:
+
+                meanings = [
+                    "Muy Bajo",
+                    "Bajo",
+                    "Moderado",
+                    "Alto",
+                    "Muy Alto"
+                ]
+                
+                colors = [
+                    self.get_rgb_ndwi("red"),
+                    self.get_rgb_ndwi("yellow"),
+                    self.get_rgb_ndwi("green"),
+                    self.get_rgb_ndwi("cyan"),
+                    self.get_rgb_ndwi("blue"),
+                ]
+                
+            color_y_position = 320
+            for color, meaning in zip(colors, meanings):
+                c.setFillColorRGB(*color)  # Usar el color específico
+                c.rect(100, color_y_position, 20, 20, fill=True, stroke=False)
+                c.setFont("Helvetica-Bold", 12)
+                c.setFillColorRGB(0, 0, 0)  # Cambiado a color negro
+                c.drawString(130, color_y_position + 5, f"{meaning}")  # Cambiado a solo el tipo de vegetación
+                color_y_position -= 25  # Aumentado el espacio entre líneas
+            
+            # Add additional information
+            additional_info_title = "Información adicional"
+            c.setFont("Helvetica-Bold", 12)  # Cambiado a negrita
+            c.drawString(100, 200, additional_info_title)  # Posición ajustada
+            
+            info_y_position = 180  # Aumentado el espacio entre líneas
+            for key, value in additional_info.items():
+                c.setFont("Helvetica-Bold", 12)  # Cambiado a tamaño 12
+                c.setFillColorRGB(0, 0, 0)  # Cambiado a color negro
+                c.drawString(130, info_y_position, f"{key}: {value}")
+                info_y_position -= 20
+            
+            # Add footer
+            c.setFont("Helvetica-Bold", 8)
+            c.setFillColorRGB(0, 0, 0)  # Cambiado a color negro
+            c.drawString(400, 30, "Generado por Terradata ©")
+            
             c.save()
         except Exception as e:
             print(e)
+    
+
+    def get_metadata(self, metadata):
+        
+        timestamp_ms = (metadata['properties']['system:time_start']) / 1000  # Convert to seconds
+        date_image = datetime.utcfromtimestamp(timestamp_ms).strftime('%Y-%m-%d')
+
+        additional_info = {
+            "ID": metadata['id'],
+            "Versión": metadata['version'],
+            "Satélite": metadata['properties']['SPACECRAFT_NAME'],
+            "Porcentaje de Nubosidad": metadata['properties']['CLOUDY_PIXEL_PERCENTAGE'],
+            "Fecha de Imagen": date_image
+            }
+        
+
+        return additional_info
 
 
     def async_function(self, geoprocess, bbox, option, email):
@@ -119,6 +222,7 @@ class Process(APIView):
 
 
         if option == "arboles":
+            is_segment = True
             image = "Image.tif"
             tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
             sam = LangSAM()
@@ -133,6 +237,7 @@ class Process(APIView):
                 title='',
                 output=output_file)
         elif option == "piletas":
+            is_segment = True
             image = "Image.tif"
             tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
             sam = LangSAM()
@@ -147,6 +252,7 @@ class Process(APIView):
                 title='',
                 output=output_file)
         elif option == "construcciones_sam":
+            is_segment = True
             image = "Image.tif"
             tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
             sam = LangSAM()
@@ -161,6 +267,8 @@ class Process(APIView):
                 title='',
                 output=output_file)
         elif option == "agua":
+            is_segment = False
+            is_ndvi = False
             output_file = 'water.tif'
             title_file = 'Índices de Clasificación de Volumen de Agua'
             description_file = 'Reporte describiendo los resultados del índice de masa de agua.'
@@ -184,6 +292,11 @@ class Process(APIView):
             # Select image
             img = imgs_s2.sort('system:time_start', False).first()
 
+            # Get metadata
+            metadata = img.getInfo()
+
+            additional_info = self.get_metadata(metadata)
+
             # Clip the image
             s2_clip = img.clip(bbox)
 
@@ -193,6 +306,8 @@ class Process(APIView):
             # Export the image as a TIFF file
             geemap.ee_export_image(ndwi.visualize(palette=['red', 'yellow', 'green', 'cyan', 'blue']), filename=output_file, scale=10, region=bbox, file_per_band=False)
         elif option == "vegetacion":
+            is_segment = False
+            is_ndvi = True
             output_file = 'ndvi.tif'
             title_file = 'Índices de Clasificación de Vegetación'
             description_file = 'Reporte describiendo los resultados del índice de vegetación.'
@@ -214,7 +329,12 @@ class Process(APIView):
                 .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
 
             # Select image
-            img = imgs_s2.sort('system:time_start').first()
+            img = imgs_s2.sort('system:time_start', False).first()
+            
+            # Get metadata
+            metadata = img.getInfo()
+
+            additional_info = self.get_metadata(metadata)
 
             # Clip the image
             s2_clip = img.clip(bbox)
@@ -225,8 +345,11 @@ class Process(APIView):
                 "red": s2_clip.select("B3")
             })
 
+            palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F18555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']
+
             # Export the image as a TIFF file
-            geemap.ee_export_image(ndvi.visualize(min=0, max=1, palette=['FFFFFF', 'CE7E45', 'DF923D', 'F18555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']), filename=output_file, scale=10, region=bbox, file_per_band=False)
+            geemap.ee_export_image(ndvi.visualize(min=0, max=1, palette=palette), filename=output_file, scale=10, region=bbox, file_per_band=False)
+
         else:
             # Handle an invalid option here if needed
             print("Funcionalidades de GEE en desarrollo")
@@ -235,7 +358,10 @@ class Process(APIView):
         report_pdf_path = output_file.replace('.tif', '.pdf')
 
         # Generate PDF
-        self.generate_pdf(output_file, title_file, report_pdf_path)
+        if is_segment:
+            pass
+        else:
+            self.generate_pdf_index(output_file, title_file, report_pdf_path, additional_info, is_ndvi)
 
         report_instance = Report.objects.create(
             geo_process=geoprocess,
@@ -249,7 +375,7 @@ class Process(APIView):
             report_instance.file.save(os.path.basename(report_pdf_path), report_pdf_content)
         
         # Send email
-        self.send_email(email, report_pdf_path, title_file, description_file)
+        #self.send_email(email, report_pdf_path, title_file, description_file)
         
         geoprocess.status = 'Finalizado'
         geoprocess.save()

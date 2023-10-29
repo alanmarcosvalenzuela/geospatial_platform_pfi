@@ -189,16 +189,6 @@ const Home = ({ userEmail }) => {
               />
               Vegetación
             </label>
-            <label>
-              <input
-                type="radio"
-                value="construcciones"
-                checked={selectedOption === 'construcciones'}
-                onChange={() => setSelectedOption('construcciones')}
-                disabled
-              />
-              Construcciones (en desarrollo)
-            </label>
           </div>
           
           <div className="button-container" style={{ textAlign: 'center' }}>
