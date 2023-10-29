@@ -109,20 +109,24 @@ const Home = ({ userEmail }) => {
           attribution="Tiles &copy; Esri"
         />
 
-        <FeatureGroup>
-          <EditControl
-            position="topright"
-            onCreated={handleCreated}
-            draw={{
-              rectangle: true,
-              circle: false,
-              circlemarker: false,
-              marker: false,
-              polyline: false,
-              polygon: false
-            }}
-          />
-        </FeatureGroup>
+    <FeatureGroup>
+      <EditControl
+        position="topright"
+        onCreated={handleCreated}
+        draw={{
+          rectangle: {
+            shapeOptions: {
+              color: '#FFA07A', // Color del trazo del cuadrado
+            },
+          },
+          circle: false,
+          circlemarker: false,
+          marker: false,
+          polyline: false,
+          polygon: false
+        }}
+      />
+    </FeatureGroup>
         
         {!popupVisible && drawnItems && (
           <button

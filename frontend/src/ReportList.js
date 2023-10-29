@@ -2,19 +2,31 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Table from 'react-bootstrap/Table';
 import Container from 'react-bootstrap/Container';
+import ReactPaginate from 'react-paginate';
+import './ReportList.css'; // Importa el archivo CSS
 
 const ReportList = ({ userEmail }) => {
   const [reports, setReports] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const perPage = 15;
+
+  const handlePageClick = (data) => {
+    setCurrentPage(data.selected);
+  };
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:8000/geoprocess/reports/${userEmail}/`)
-      .then(response => {
+    axios
+      .get(`http://127.0.0.1:8000/geoprocess/reports/${userEmail}/`)
+      .then((response) => {
         setReports(response.data.user_reports);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Error fetching reports:', error);
       });
-  }, [userEmail]);
+  }, [userEmail, currentPage]);
+
+  const offset = currentPage * perPage;
+  const currentPageData = reports.slice(offset, offset + perPage);
 
   return (
     <div>
@@ -30,7 +42,7 @@ const ReportList = ({ userEmail }) => {
             </tr>
           </thead>
           <tbody>
-            {reports.map(report => (
+            {currentPageData.map((report) => (
               <tr key={report.id}>
                 <td>{report.id}</td>
                 <td>{report.title}</td>
@@ -45,6 +57,22 @@ const ReportList = ({ userEmail }) => {
             ))}
           </tbody>
         </Table>
+      </Container>
+
+      <Container className="pagination-container">
+        <ReactPaginate
+          previousLabel={currentPage !== 0 ? 'Anterior' : null}
+          nextLabel={currentPage !== Math.ceil(reports.length / perPage) - 1 ? 'Siguiente' : null}
+          breakLabel={'...'}
+          pageCount={Math.ceil(reports.length / perPage)}
+          marginPagesDisplayed={2}
+          pageRangeDisplayed={5}
+          onPageChange={handlePageClick}
+          containerClassName={'pagination'}
+          subContainerClassName={'pages pagination'}
+          activeClassName={'active'}
+          disableInitialCallback={true}
+        />
       </Container>
     </div>
   );
