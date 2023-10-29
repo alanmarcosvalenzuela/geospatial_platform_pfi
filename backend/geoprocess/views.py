@@ -75,7 +75,7 @@ class Process(APIView):
     def send_email(self, email, report_pdf_path, title_file, description_file):
         
         subject = f"Terradata - Geoproceso: {title_file}"
-        body = f"{description_file} ---> Ejecutado con éxito"
+        body = f"{description_file}\n\nEjecutado con éxito\n\n\n\nTerradata © 2023"
         from_email = "terradata2023@gmail.com"
 
         try:
@@ -411,7 +411,7 @@ class Process(APIView):
             report_instance.file.save(os.path.basename(report_pdf_path), report_pdf_content)
         
         # Send email
-        #self.send_email(email, report_pdf_path, title_file, description_file)
+        self.send_email(email, report_pdf_path, title_file, description_file)
         
         geoprocess.status = 'Finalizado'
         geoprocess.save()
