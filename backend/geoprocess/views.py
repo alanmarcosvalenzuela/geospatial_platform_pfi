@@ -23,10 +23,11 @@ from .models import GeoProcess, Report
 
 class UserReportsAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
+
     def get(self, request, email, format=None):
         try:
             user = AppUser.objects.get(email=email)
-            reports = Report.objects.filter(geo_process__user=user)
+            reports = Report.objects.filter(geo_process__user=user).order_by('-id')
             serialized_reports = [
                 {
                     'id': report.id,
@@ -40,6 +41,7 @@ class UserReportsAPIView(APIView):
             return Response({'user_reports': serialized_reports}, status=status.HTTP_200_OK)
         except AppUser.DoesNotExist:
             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 
 class ReportDownloadView(APIView):
