@@ -13,7 +13,7 @@ WORKDIR /app
 RUN apt update && apt install -y git python3-pip ffmpeg libsm6 libxext6
 
 # Clone the GitHub repository
-RUN git  clone https://github.com/alanmarcosvalenzuela/geospatial_platform_pfi.git -b develop-postgres .
+RUN git  clone https://github.com/alanmarcosvalenzuela/geospatial_platform_pfi.git .
 
 # Change the working directory to "backend"
 WORKDIR /app/backend
