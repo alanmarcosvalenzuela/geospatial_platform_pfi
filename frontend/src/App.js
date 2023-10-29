@@ -217,7 +217,16 @@ function App() {
             </div>
           </div>
         )}
+
+        {!currentUser && (
+          <footer className="footer">
+            <div className="text-center text-white">
+              <p>Terradata &copy; 2023</p>
+            </div>
+          </footer>
+        )}
       </Router>
+      
     </div>
   );
 }

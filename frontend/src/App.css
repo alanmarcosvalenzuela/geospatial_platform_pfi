@@ -60,3 +60,12 @@ span.input-group-addon {
   justify-content: stretch; /* Alinea los elementos para que ocupen toda la altura disponible */
   background-image: url('background.jpg');
 }
+
+
+.footer {
+  background-color: #343a40;
+  height: 30px; 
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
