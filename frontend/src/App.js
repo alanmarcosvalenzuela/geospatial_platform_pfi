@@ -125,7 +125,7 @@ function App() {
         <Navbar bg="dark" variant="dark">
           <Container>
             <Navbar.Brand>
-              <Link to="/" className="nav-link btn btn-light me-2">
+            <Link to="/" className="nav-link btn btn-light me-2" onClick={() => { if(window.location.pathname === "/") window.location.reload() }}>
                 Plataforma Terradata
               </Link>
             </Navbar.Brand>
