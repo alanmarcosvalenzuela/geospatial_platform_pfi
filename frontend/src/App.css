@@ -9,6 +9,12 @@
 
 /* boostrap form style */
 
+.mb-3 .form-label,
+.mb-3 .form-text {
+  color: white !important;
+}
+
+
 .form-inline {
   width: 100%;
 }
@@ -38,6 +44,7 @@ span.input-group-addon {
     font-size: large;
     font-weight: bold;
 }
+
 
 
 .no-link-style {
