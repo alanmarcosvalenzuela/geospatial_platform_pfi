@@ -15,7 +15,6 @@ const Home = ({ userEmail }) => {
   const [checkInterval, setCheckInterval] = useState(null);
   const [processing, setProcessing] = useState(false);
 
-
   const handleCreated = (e) => {
     const { layer } = e;
     setDrawnItems(layer);
@@ -58,7 +57,7 @@ const Home = ({ userEmail }) => {
       axios.post('http://127.0.0.1:8000/geoprocess/process', data)
         .then(response => {
           console.log('Respuesta de la API:', response.data);
-          const geoprocessId = response.data.id; // Obtener el ID del geoproceso
+          const geoprocessId = response.data.id;
           setGeoprocessStatus(geoprocessId);
           const intervalId = setInterval(() => checkGeoprocessStatus(geoprocessId), 5000);
           setCheckInterval(intervalId);
@@ -86,14 +85,12 @@ const Home = ({ userEmail }) => {
 
   useEffect(() => {
     return () => {
-      // Limpia el intervalo cuando el componente se desmonta
       if (checkInterval) {
         clearInterval(checkInterval);
-        setProcessing(false); 
+        setProcessing(false);
       }
     };
   }, [checkInterval]);
-
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
@@ -105,49 +102,57 @@ const Home = ({ userEmail }) => {
       >
         <TileLayer
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          // url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
           attribution="Tiles &copy; Esri"
         />
-
-    <FeatureGroup>
-      <EditControl
-        position="topright"
-        onCreated={handleCreated}
-        draw={{
-          rectangle: {
-            shapeOptions: {
-              color: '#FFA07A', // Color del trazo del cuadrado
-            },
-          },
-          circle: false,
-          circlemarker: false,
-          marker: false,
-          polyline: false,
-          polygon: false
-        }}
-      />
-    </FeatureGroup>
-        
-        {!popupVisible && drawnItems && (
+        <FeatureGroup>
+          <EditControl
+            position="topright"
+            onCreated={handleCreated}
+            draw={{
+              rectangle: {
+                shapeOptions: {
+                  color: '#FFA07A',
+                },
+              },
+              circle: false,
+              circlemarker: false,
+              marker: false,
+              polyline: false,
+              polygon: false
+            }}
+          />
+        </FeatureGroup>
+        {!popupVisible && drawnItems && !processing && (
           <button
             onClick={handleSendClick}
-            style={{ position: 'absolute', bottom: '60px', left: '50%', transform: 'translateX(-50%)', zIndex: 1001, padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer',  fontSize: '16px' }}
+            style={{
+              position: 'absolute',
+              bottom: '60px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1001,
+              padding: '10px 20px',
+              backgroundColor: '#007BFF',
+              color: 'white',
+              borderRadius: '4px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
           >
             Procesar
           </button>
         )}
       </MapContainer>
-
       {popupVisible && (
         <div className="popup" style={{ position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)', zIndex: 1002, padding: '20px', backgroundColor: 'white', boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
           <h3 style={{ fontWeight: 'bold', marginBottom: '20px' }}>Selecciona un geoproceso</h3>
-          
           <div style={{ marginBottom: '20px' }}>
             <h4>Detección y Segmentación</h4>
             <label>
               <input
                 type="radio"
-                value="construcciones"
+                value="construcciones_sam"
                 checked={selectedOption === 'construcciones_sam'}
                 onChange={() => setSelectedOption('construcciones_sam')}
               />
@@ -172,7 +177,6 @@ const Home = ({ userEmail }) => {
               Piletas
             </label>
           </div>
-          
           <div style={{ marginBottom: '20px' }}>
             <h4>Índices de Clasificación</h4>
             <label>
@@ -194,7 +198,6 @@ const Home = ({ userEmail }) => {
               Vegetación
             </label>
           </div>
-          
           <div className="button-container" style={{ textAlign: 'center' }}>
             <button onClick={handleExecute} style={{ backgroundColor: '#28A745', color: 'white', padding: '8px 16px', fontSize: '14px', borderRadius: '4px', border: 'none', cursor: 'pointer', marginRight: '10px' }}>
               Ejecutar
@@ -212,8 +215,8 @@ const Home = ({ userEmail }) => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)', // Cambiar color de fondo
-            color: 'white', // Cambiar color del texto
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
             padding: '20px',
             borderRadius: '8px',
             zIndex: 9999,
@@ -221,7 +224,7 @@ const Home = ({ userEmail }) => {
             alignItems: 'center'
           }}
         >
-          <Loader /> 
+          <Loader />
         </div>
       )}
     </div>
