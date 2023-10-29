@@ -66,11 +66,6 @@ class GeoProcessStatusAPIView(APIView):
             return Response({'message': 'GeoProcess not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-
-
-
-
-
 class Process(APIView):
     permission_classes = (permissions.AllowAny,)
     authentication_classes = ()
@@ -110,6 +105,39 @@ class Process(APIView):
             "Alta": (0.0, 0.502, 0.251),
         }
         return color_mappings.get(color, (0, 0, 0))
+
+
+    def generate_pdf_sam(self, image_path, title, output_path, additional_info):
+        try:
+            c = canvas.Canvas(output_path, pagesize=letter)
+            c.setFont("Helvetica-Bold", 16)  # Cambiado a negrita y tamaño aumentado
+            
+            # Add centered title
+            c.drawCentredString(300, 750, title)
+            
+            # Add image
+            c.drawImage(image_path, 100, 400, width=400, height=300)
+            
+            # Add additional information
+            additional_info_title = "Información adicional"
+            c.setFont("Helvetica-Bold", 12)  # Cambiado a negrita
+            c.drawString(100, 350, additional_info_title)  # Posición ajustada
+            
+            info_y_position = 330  # Aumentado el espacio entre líneas
+            for key, value in additional_info.items():
+                c.setFont("Helvetica-Bold", 12)  # Cambiado a tamaño 12
+                c.setFillColorRGB(0, 0, 0)  # Cambiado a color negro
+                c.drawString(130, info_y_position, f"{key}: {value}")
+                info_y_position -= 20
+            
+            # Add footer
+            c.setFont("Helvetica-Bold", 8)
+            c.setFillColorRGB(0, 0, 0)  # Cambiado a color negro
+            c.drawString(400, 30, "Generado por Terradata ©")
+            
+            c.save()
+        except Exception as e:
+            print(e)
 
     def generate_pdf_index(self, image_path, title, output_path, additional_info, is_ndvi):
         try:
@@ -228,6 +256,7 @@ class Process(APIView):
             sam = LangSAM()
 
             sam.predict(image, 'tree', box_threshold=0.22, text_threshold=0.22)
+
             output_file = 'arboles.tif'
             title_file = 'Segmentación Automática de Zonas Verdes'
             description_file = 'Reporte describiendo los resultados de la segmentación de espacios verdes.'
@@ -359,7 +388,12 @@ class Process(APIView):
 
         # Generate PDF
         if is_segment:
-            pass
+            additional_info = {
+                "ID": "",
+                "Versión": "",
+                "Satélite": ""
+            }
+            self.generate_pdf_sam(output_file, title_file, report_pdf_path, additional_info)
         else:
             self.generate_pdf_index(output_file, title_file, report_pdf_path, additional_info, is_ndvi)
 
