@@ -34,6 +34,9 @@ span.input-group-addon {
     justify-content: center;
     align-items: center;
     margin-top: 5%;
+    color: white;
+    font-size: large;
+    font-weight: bold;
 }
 
 
@@ -48,4 +51,5 @@ span.input-group-addon {
   display: flex;
   flex-direction: column; /* Organiza los elementos verticalmente */
   justify-content: stretch; /* Alinea los elementos para que ocupen toda la altura disponible */
+  background-image: url('background.jpg');
 }
