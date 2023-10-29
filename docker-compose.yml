@@ -1,0 +1,33 @@
+version: '3'
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+
+  backend:
+    build:
+      context: ./backend
+    image: backend
+    ports:
+      - "8000:8000"
+    command: bash entrypoint.sh
+    depends_on:
+      - postgres_docker_db
+
+  postgres_docker_db:
+    container_name: postgres_container
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-terradata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-terradata_default_password$}
+      POSTGRES_DB: ${POSTGRES_DB:-terradata}
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    restart: unless-stopped
+
+volumes:
+    postgres:
