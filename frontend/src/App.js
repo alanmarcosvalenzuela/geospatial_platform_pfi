@@ -18,14 +18,13 @@ const client = axios.create({
 });
 
 function App() {
-
   const [currentUser, setCurrentUser] = useState();
   const [registrationToggle, setRegistrationToggle] = useState(false);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [userEmail, setUserEmail] = useState('');
-  
+  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
     const userStatus = localStorage.getItem('currentUser');
@@ -38,7 +37,6 @@ function App() {
       setUserEmail('');
     }
   }, []);
-  
 
   function update_form_btn() {
     if (registrationToggle) {
@@ -78,8 +76,10 @@ function App() {
         setPassword('');
       });
     });
+    setEmail(''); // Limpiar campo de correo después de enviar
+    setPassword(''); // Limpiar campo de contraseña después de enviar
   }
-  
+
   function submitLogin(e) {
     e.preventDefault();
     client.post(
@@ -95,9 +95,16 @@ function App() {
       setUserEmail(email);
       setEmail('');
       setPassword('');
+      setLoginError('');
+    }).catch(function(error) {
+      if (error.response && error.response.status === 400) {
+        setLoginError('Credenciales no válidas');
+      }
     });
+    setEmail(''); // Limpiar campo de correo después de enviar
+    setPassword(''); // Limpiar campo de contraseña después de enviar
   }
-  
+
   function submitLogout(e) {
     e.preventDefault();
     client.post(
@@ -111,10 +118,9 @@ function App() {
       window.location.href = '/';
     });
   }
-  
 
-    return (
-      <div className="app-container">
+  return (
+    <div className="app-container">
       <Router>
         <Navbar bg="dark" variant="dark">
           <Container>
@@ -127,7 +133,6 @@ function App() {
             <Navbar.Collapse className="justify-content-end">
               <Navbar.Text>
                 <div className="d-flex align-items-center">
-                  
                   {currentUser && (
                     <div className="d-flex align-items-center">
                       <span className="me-2">Hola {userEmail}</span>
@@ -150,7 +155,6 @@ function App() {
           </Container>
         </Navbar>
 
-        
         <Routes>
           {currentUser ? (
             <>
@@ -165,36 +169,9 @@ function App() {
           )}
         </Routes>
 
-        
-      
         {!currentUser && registrationToggle && ( 
-        <div className="center">
-          <Form onSubmit={e => submitRegistration(e)}>
-            <Form.Group className="mb-3" controlId="formBasicEmail">
-              <Form.Label>Correo Electrónico</Form.Label>
-              <Form.Control type="email" placeholder="Ingrese su email" value={email} onChange={e => setEmail(e.target.value)} />
-              <Form.Text className="text-muted">
-                Nunca compartiremos su correo electrónico con nadie más.
-              </Form.Text>
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formBasicUsername">
-              <Form.Label>Usuario</Form.Label>
-              <Form.Control type="text" placeholder="Ingrese su usuario" value={username} onChange={e => setUsername(e.target.value)} />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formBasicPassword">
-              <Form.Label>Contraseña</Form.Label>
-              <Form.Control type="password" placeholder="Ingrese su contraseña" value={password} onChange={e => setPassword(e.target.value)} />
-            </Form.Group>
-            <Button variant="primary" type="submit">
-              Registrarse
-            </Button>
-          </Form>
-        </div>        
-      ) } 
-      {!currentUser && !registrationToggle && (
-        <div className="center">
-          <div className="d-flex justify-content-between">
-            <Form onSubmit={e => submitLogin(e)}>
+          <div className="center">
+            <Form onSubmit={e => submitRegistration(e)}>
               <Form.Group className="mb-3" controlId="formBasicEmail">
                 <Form.Label>Correo Electrónico</Form.Label>
                 <Form.Control type="email" placeholder="Ingrese su email" value={email} onChange={e => setEmail(e.target.value)} />
@@ -202,25 +179,47 @@ function App() {
                   Nunca compartiremos su correo electrónico con nadie más.
                 </Form.Text>
               </Form.Group>
+              <Form.Group className="mb-3" controlId="formBasicUsername">
+                <Form.Label>Usuario</Form.Label>
+                <Form.Control type="text" placeholder="Ingrese su usuario" value={username} onChange={e => setUsername(e.target.value)} />
+              </Form.Group>
               <Form.Group className="mb-3" controlId="formBasicPassword">
                 <Form.Label>Contraseña</Form.Label>
                 <Form.Control type="password" placeholder="Ingrese su contraseña" value={password} onChange={e => setPassword(e.target.value)} />
               </Form.Group>
               <Button variant="primary" type="submit">
-                Iniciar Sesión
+                Registrarse
               </Button>
             </Form>
-            
+          </div>        
+        ) } 
+
+        {!currentUser && !registrationToggle && (
+          <div className="center">
+            <div className="d-flex justify-content-between">
+              <Form onSubmit={e => submitLogin(e)}>
+                <Form.Group className="mb-3" controlId="formBasicEmail">
+                  <Form.Label>Correo Electrónico</Form.Label>
+                  <Form.Control type="email" placeholder="Ingrese su email" value={email} onChange={e => setEmail(e.target.value)} required />
+                  <Form.Text className="text-muted">
+                    Nunca compartiremos su correo electrónico con nadie más.
+                  </Form.Text>
+                </Form.Group>
+                <Form.Group className="mb-3" controlId="formBasicPassword">
+                  <Form.Label>Contraseña</Form.Label>
+                  <Form.Control type="password" placeholder="Ingrese su contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
+                </Form.Group>
+                <Button variant="primary" type="submit">
+                  Iniciar Sesión
+                </Button>
+                {loginError && <div className="text-danger">{loginError}</div>}
+              </Form>
             </div>
-        </div>
-        
-      )}
+          </div>
+        )}
       </Router>
     </div>
-    );
-  }
-  
-  
-  
+  );
+}
 
 export default App;

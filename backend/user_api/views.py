@@ -32,6 +32,7 @@ class UserLogin(APIView):
 			user = serializer.check_user(data)
 			login(request, user)
 			return Response(serializer.data, status=status.HTTP_200_OK)
+		return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLogout(APIView):
