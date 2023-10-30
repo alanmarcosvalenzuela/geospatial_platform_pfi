@@ -129,8 +129,18 @@ class Process(APIView):
             for key, value in additional_info.items():
                 c.setFont("Helvetica-Bold", 12)  # Cambiado a tamaño 12
                 c.setFillColorRGB(0, 0, 0)  # Cambiado a color negro
-                c.drawString(130, info_y_position, f"{key}: {value}")
-                info_y_position -= 20
+                if key == "Bounding box":
+                    c.drawString(120, info_y_position, "•")  # Bullet point
+                    c.drawString(130, info_y_position, f"{key}:")
+                    info_y_position -= 15
+                    for k, v in value.items():
+                        c.drawString(150, info_y_position, f"{k}: {v}")
+                        info_y_position -= 15
+                    info_y_position -= 5
+                else:
+                    c.drawString(120, info_y_position, "•")  # Bullet point
+                    c.drawString(130, info_y_position, f"{key}: {value}")
+                    info_y_position -= 20
             
             # Add footer
             c.setFont("Helvetica-Bold", 8)
@@ -211,6 +221,7 @@ class Process(APIView):
             for key, value in additional_info.items():
                 c.setFont("Helvetica-Bold", 12)  # Cambiado a tamaño 12
                 c.setFillColorRGB(0, 0, 0)  # Cambiado a color negro
+                c.drawString(120, info_y_position, "•")  # Bullet point
                 c.drawString(130, info_y_position, f"{key}: {value}")
                 info_y_position -= 20
             
@@ -224,7 +235,7 @@ class Process(APIView):
             print(e)
     
 
-    def get_metadata(self, metadata):
+    def get_metadata(self, metadata, geoprocess_id):
         
         timestamp_ms = (metadata['properties']['system:time_start']) / 1000  # Convert to seconds
         date_image = datetime.utcfromtimestamp(timestamp_ms).strftime('%Y-%m-%d')
@@ -234,7 +245,8 @@ class Process(APIView):
             "Versión": metadata['version'],
             "Satélite": metadata['properties']['SPACECRAFT_NAME'],
             "Porcentaje de Nubosidad": metadata['properties']['CLOUDY_PIXEL_PERCENTAGE'],
-            "Fecha de Imagen": date_image
+            "Fecha de Imagen": date_image,
+            "ID de Geoproceso": geoprocess_id,
             }
         
 
@@ -249,15 +261,19 @@ class Process(APIView):
         ymax = bbox['ymax']
         # Create the desired format
         bbox_formatted = [xmin, ymin, xmax, ymax]
+        time_ejecution = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
         if option == "arboles":
             is_segment = True
             image = "Image.tif"
-            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
+            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
             sam = LangSAM()
 
             sam.predict(image, 'tree', box_threshold=0.22, text_threshold=0.22)
+
+            phrases = sam.phrases
+            cont_phrases = len(phrases)
 
             output_file = 'arboles.tif'
             title_file = 'Segmentación Automática de Zonas Verdes'
@@ -265,12 +281,12 @@ class Process(APIView):
             sam.show_anns(
                 cmap='Greens',
                 box_color='red',
-                title='',
+                title='GeoSam',
                 output=output_file)
         elif option == "piletas":
             is_segment = True
             image = "Image.tif"
-            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
+            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
             sam = LangSAM()
 
             sam.predict(image, 'swimming pool', box_threshold=0.23, text_threshold=0.23)
@@ -280,12 +296,12 @@ class Process(APIView):
             sam.show_anns(
                 cmap='Blues',  # You can adjust the colormap as needed
                 box_color='red',
-                title='',
+                title='GeoSam',
                 output=output_file)
         elif option == "construcciones_sam":
             is_segment = True
             image = "Image.tif"
-            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="ESRI", overwrite=True)
+            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
             sam = LangSAM()
 
             sam.predict(image, 'ceiling', box_threshold=0.20, text_threshold=0.20)
@@ -307,8 +323,8 @@ class Process(APIView):
             today = date.today()
             yesterday = today - timedelta(days=1)
             six_months_ago = today - timedelta(days=180)
-
-            bbox = ee.Geometry.Rectangle(bbox_formatted)
+            
+            bbox_geometry = ee.Geometry.Rectangle(bbox_formatted)
 
             # Date format
             start_date = six_months_ago.strftime('%Y-%m-%d')
@@ -317,7 +333,7 @@ class Process(APIView):
             # Filter image collection
             imgs_s2 = ee.ImageCollection('COPERNICUS/S2') \
                 .filterDate(start_date, end_date) \
-                .filterBounds(bbox) \
+                .filterBounds(bbox_geometry) \
                 .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
 
             # Select image
@@ -326,16 +342,17 @@ class Process(APIView):
             # Get metadata
             metadata = img.getInfo()
 
-            additional_info = self.get_metadata(metadata)
+            geoprocess_id = geoprocess.id
+            additional_info = self.get_metadata(metadata, geoprocess_id)
 
             # Clip the image
-            s2_clip = img.clip(bbox)
+            s2_clip = img.clip(bbox_geometry)
 
             # Calculate NDWI
             ndwi = s2_clip.normalizedDifference(['B3', 'B8']).rename('NDWI')
 
             # Export the image as a TIFF file
-            geemap.ee_export_image(ndwi.visualize(palette=['red', 'yellow', 'green', 'cyan', 'blue']), filename=output_file, scale=10, region=bbox, file_per_band=False)
+            geemap.ee_export_image(ndwi.visualize(palette=['red', 'yellow', 'green', 'cyan', 'blue']), filename=output_file, scale=10, region=bbox_geometry, file_per_band=False)
         elif option == "vegetacion":
             is_segment = False
             is_ndvi = True
@@ -347,7 +364,7 @@ class Process(APIView):
             yesterday = today - timedelta(days=1)
             six_months_ago = today - timedelta(days=180)
 
-            bbox = ee.Geometry.Rectangle(bbox_formatted)
+            bbox_geometry = ee.Geometry.Rectangle(bbox_formatted)
 
             # Date format
             start_date = six_months_ago.strftime('%Y-%m-%d')
@@ -356,7 +373,7 @@ class Process(APIView):
             # Filter image collection
             imgs_s2 = ee.ImageCollection('COPERNICUS/S2') \
                 .filterDate(start_date, end_date) \
-                .filterBounds(bbox) \
+                .filterBounds(bbox_geometry) \
                 .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
 
             # Select image
@@ -365,10 +382,11 @@ class Process(APIView):
             # Get metadata
             metadata = img.getInfo()
 
-            additional_info = self.get_metadata(metadata)
+            geoprocess_id = geoprocess.id
+            additional_info = self.get_metadata(metadata, geoprocess_id)
 
             # Clip the image
-            s2_clip = img.clip(bbox)
+            s2_clip = img.clip(bbox_geometry)
 
             # Calculate NDVI
             ndvi = s2_clip.expression("(nir-red)/(nir+red)", {
@@ -379,7 +397,7 @@ class Process(APIView):
             palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F18555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']
 
             # Export the image as a TIFF file
-            geemap.ee_export_image(ndvi.visualize(min=0, max=1, palette=palette), filename=output_file, scale=10, region=bbox, file_per_band=False)
+            geemap.ee_export_image(ndvi.visualize(min=0, max=1, palette=palette), filename=output_file, scale=10, region=bbox_geometry, file_per_band=False)
 
         else:
             # Handle an invalid option here if needed
@@ -389,15 +407,6 @@ class Process(APIView):
         report_pdf_path = output_file.replace('.tif', '.pdf')
 
         # Generate PDF
-        if is_segment:
-            additional_info = {
-                "ID": "",
-                "Versión": "",
-                "Satélite": ""
-            }
-            self.generate_pdf_sam(output_file, title_file, report_pdf_path, additional_info)
-        else:
-            self.generate_pdf_index(output_file, title_file, report_pdf_path, additional_info, is_ndvi)
 
         report_instance = Report.objects.create(
             geo_process=geoprocess,
@@ -405,13 +414,27 @@ class Process(APIView):
             description= description_file
         )
 
+        if is_segment:
+            additional_info = {
+                "Cantidad de Ocurrencias": cont_phrases,
+                "Bounding box": bbox,
+                "ID de Geoproceso": geoprocess.id,
+                "ID de Reporte": report_instance.id,
+                "Hora de Ejecución": time_ejecution,
+            }
+            self.generate_pdf_sam(output_file, title_file, report_pdf_path, additional_info)
+        else:
+            additional_info["ID de Reporte"] = report_instance.id
+            additional_info["Hora de Ejecución"] = time_ejecution
+            self.generate_pdf_index(output_file, title_file, report_pdf_path, additional_info, is_ndvi)
+
         # Save the report file to the media directory
         with open(report_pdf_path, 'rb') as f:
             report_pdf_content = File(f)
             report_instance.file.save(os.path.basename(report_pdf_path), report_pdf_content)
         
         # Send email
-        self.send_email(email, report_pdf_path, title_file, description_file)
+        #self.send_email(email, report_pdf_path, title_file, description_file)
         
         geoprocess.status = 'Finalizado'
         geoprocess.save()

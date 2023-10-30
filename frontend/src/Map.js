@@ -10,7 +10,7 @@ import Loader from './Loader';
 const Home = ({ userEmail }) => {
   const [drawnItems, setDrawnItems] = useState(null);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [selectedOption, setSelectedOption] = useState('construcciones_sam');
+  const [selectedOption, setSelectedOption] = useState('arboles');
   const [geoprocessStatus, setGeoprocessStatus] = useState('');
   const [checkInterval, setCheckInterval] = useState(null);
   const [processing, setProcessing] = useState(false);
@@ -152,15 +152,6 @@ const Home = ({ userEmail }) => {
             <label>
               <input
                 type="radio"
-                value="construcciones_sam"
-                checked={selectedOption === 'construcciones_sam'}
-                onChange={() => setSelectedOption('construcciones_sam')}
-              />
-              Construcciones
-            </label>
-            <label>
-              <input
-                type="radio"
                 value="arboles"
                 checked={selectedOption === 'arboles'}
                 onChange={() => setSelectedOption('arboles')}
@@ -175,6 +166,15 @@ const Home = ({ userEmail }) => {
                 onChange={() => setSelectedOption('piletas')}
               />
               Piletas
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="construcciones_sam"
+                checked={selectedOption === 'construcciones_sam'}
+                onChange={() => setSelectedOption('construcciones_sam')}
+              />
+              Construcciones
             </label>
           </div>
           <div style={{ marginBottom: '20px' }}>
