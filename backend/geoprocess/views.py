@@ -3,7 +3,7 @@ import threading
 from datetime import date, datetime, timedelta
 
 import geemap
-from django.conf import settings
+from django.contrib.gis.geos import Polygon
 from django.core.files import File
 from django.core.mail import EmailMessage
 from django.http import FileResponse
@@ -18,7 +18,7 @@ from samgeo import tms_to_geotiff
 from samgeo.text_sam import LangSAM
 from user_api.models import AppUser
 
-from .models import GeoProcess, Report
+from .models import GeoProcess, Layer, Metadata, Report
 
 
 class UserReportsAPIView(APIView):
@@ -255,190 +255,234 @@ class Process(APIView):
 
     def async_function(self, geoprocess, bbox, option, email):
 
-        xmin = bbox['xmin']
-        ymin = bbox['ymin']
-        xmax = bbox['xmax']
-        ymax = bbox['ymax']
-        # Create the desired format
-        bbox_formatted = [xmin, ymin, xmax, ymax]
-        time_ejecution = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        try:
+
+            xmin = bbox['xmin']
+            ymin = bbox['ymin']
+            xmax = bbox['xmax']
+            ymax = bbox['ymax']
+            # Create the desired format
+            bbox_formatted = [xmin, ymin, xmax, ymax]
+            time_ejecution = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
-        if option == "arboles":
-            is_segment = True
-            image = "Image.tif"
-            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
-            sam = LangSAM()
+            if option == "arboles":
+                is_segment = True
+                source = "GeoSam"
+                image = "Image.tif"
+                tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
+                sam = LangSAM()
 
-            sam.predict(image, 'tree', box_threshold=0.22, text_threshold=0.22)
+                sam.predict(image, 'tree', box_threshold=0.22, text_threshold=0.22)
 
-            phrases = sam.phrases
-            cont_phrases = len(phrases)
+                phrases = sam.phrases
+                cont_phrases = len(phrases)
 
-            output_file = 'arboles.tif'
-            title_file = 'Segmentación Automática de Zonas Verdes'
-            description_file = 'Reporte describiendo los resultados de la segmentación de espacios verdes.'
-            sam.show_anns(
-                cmap='Greens',
-                box_color='red',
-                title='GeoSam',
-                output=output_file)
-        elif option == "piletas":
-            is_segment = True
-            image = "Image.tif"
-            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
-            sam = LangSAM()
+                output_file = 'arboles.tif'
+                title_file = 'Segmentación Automática de Zonas Verdes'
+                description_file = 'Reporte describiendo los resultados de la segmentación de espacios verdes.'
+                sam.show_anns(
+                    cmap='Greens',
+                    box_color='red',
+                    title='GeoSam',
+                    output=output_file)
+            elif option == "piletas":
+                is_segment = True
+                source = "GeoSam"
+                image = "Image.tif"
+                tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
+                sam = LangSAM()
 
-            sam.predict(image, 'swimming pool', box_threshold=0.23, text_threshold=0.23)
-            output_file = 'pools.tif'
-            title_file = 'Segmentación Automática de Piletas'
-            description_file = 'Reporte describiendo los resultados de la segmentación de piletas.'
-            sam.show_anns(
-                cmap='Blues',  # You can adjust the colormap as needed
-                box_color='red',
-                title='GeoSam',
-                output=output_file)
-        elif option == "construcciones_sam":
-            is_segment = True
-            image = "Image.tif"
-            tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
-            sam = LangSAM()
+                sam.predict(image, 'swimming pool', box_threshold=0.23, text_threshold=0.23)
 
-            sam.predict(image, 'ceiling', box_threshold=0.20, text_threshold=0.20)
-            output_file = 'ceilings.tif'
-            title_file = 'Segmentación Automática de Construcciones'
-            description_file = 'Reporte describiendo los resultados de la segmentación de construcciones.'
-            sam.show_anns(
-                cmap='Greys',  # Adjust the colormap as needed
-                box_color='red',
-                title='',
-                output=output_file)
-        elif option == "agua":
-            is_segment = False
-            is_ndvi = False
-            output_file = 'water.tif'
-            title_file = 'Índices de Clasificación de Volumen de Agua'
-            description_file = 'Reporte describiendo los resultados del índice de masa de agua.'
+                phrases = sam.phrases
+                cont_phrases = len(phrases)
 
-            today = date.today()
-            yesterday = today - timedelta(days=1)
-            six_months_ago = today - timedelta(days=180)
+                output_file = 'pools.tif'
+                title_file = 'Segmentación Automática de Piletas'
+                description_file = 'Reporte describiendo los resultados de la segmentación de piletas.'
+                sam.show_anns(
+                    cmap='Blues',  # You can adjust the colormap as needed
+                    box_color='red',
+                    title='GeoSam',
+                    output=output_file)
+            elif option == "construcciones_sam":
+                is_segment = True
+                source = "GeoSam"
+                image = "Image.tif"
+                tms_to_geotiff(output=image, bbox=bbox_formatted, zoom=19, source="SATELLITE", overwrite=True)
+                sam = LangSAM()
+
+                sam.predict(image, 'ceiling', box_threshold=0.20, text_threshold=0.20)
+
+                phrases = sam.phrases
+                cont_phrases = len(phrases)
+
+                output_file = 'ceilings.tif'
+                title_file = 'Segmentación Automática de Construcciones'
+                description_file = 'Reporte describiendo los resultados de la segmentación de construcciones.'
+                sam.show_anns(
+                    cmap='Greys',  # Adjust the colormap as needed
+                    box_color='red',
+                    title='',
+                    output=output_file)
+            elif option == "agua":
+                is_segment = False
+                is_ndvi = False
+                source = "GEE"
+                output_file = 'water.tif'
+                title_file = 'Índices de Clasificación de Volumen de Agua'
+                description_file = 'Reporte describiendo los resultados del índice de masa de agua.'
+
+                today = date.today()
+                yesterday = today - timedelta(days=1)
+                six_months_ago = today - timedelta(days=180)
+                
+                bbox_geometry = ee.Geometry.Rectangle(bbox_formatted)
+
+                # Date format
+                start_date = six_months_ago.strftime('%Y-%m-%d')
+                end_date = yesterday.strftime('%Y-%m-%d')
             
-            bbox_geometry = ee.Geometry.Rectangle(bbox_formatted)
+                # Filter image collection
+                imgs_s2 = ee.ImageCollection('COPERNICUS/S2') \
+                    .filterDate(start_date, end_date) \
+                    .filterBounds(bbox_geometry) \
+                    .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
 
-            # Date format
-            start_date = six_months_ago.strftime('%Y-%m-%d')
-            end_date = yesterday.strftime('%Y-%m-%d')
-        
-            # Filter image collection
-            imgs_s2 = ee.ImageCollection('COPERNICUS/S2') \
-                .filterDate(start_date, end_date) \
-                .filterBounds(bbox_geometry) \
-                .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
+                # Select image
+                img = imgs_s2.sort('system:time_start', False).first()
 
-            # Select image
-            img = imgs_s2.sort('system:time_start', False).first()
+                # Get metadata
+                metadata = img.getInfo()
 
-            # Get metadata
-            metadata = img.getInfo()
+                geoprocess_id = geoprocess.id
+                additional_info = self.get_metadata(metadata, geoprocess_id)
 
-            geoprocess_id = geoprocess.id
-            additional_info = self.get_metadata(metadata, geoprocess_id)
+                # Clip the image
+                s2_clip = img.clip(bbox_geometry)
 
-            # Clip the image
-            s2_clip = img.clip(bbox_geometry)
+                # Calculate NDWI
+                ndwi = s2_clip.normalizedDifference(['B3', 'B8']).rename('NDWI')
 
-            # Calculate NDWI
-            ndwi = s2_clip.normalizedDifference(['B3', 'B8']).rename('NDWI')
+                # Export the image as a TIFF file
+                geemap.ee_export_image(ndwi.visualize(palette=['red', 'yellow', 'green', 'cyan', 'blue']), filename=output_file, scale=10, region=bbox_geometry, file_per_band=False)
+            elif option == "vegetacion":
+                is_segment = False
+                is_ndvi = True
+                source = "GEE"
+                output_file = 'ndvi.tif'
+                title_file = 'Índices de Clasificación de Vegetación'
+                description_file = 'Reporte describiendo los resultados del índice de vegetación.'
 
-            # Export the image as a TIFF file
-            geemap.ee_export_image(ndwi.visualize(palette=['red', 'yellow', 'green', 'cyan', 'blue']), filename=output_file, scale=10, region=bbox_geometry, file_per_band=False)
-        elif option == "vegetacion":
-            is_segment = False
-            is_ndvi = True
-            output_file = 'ndvi.tif'
-            title_file = 'Índices de Clasificación de Vegetación'
-            description_file = 'Reporte describiendo los resultados del índice de vegetación.'
+                today = date.today()
+                yesterday = today - timedelta(days=1)
+                six_months_ago = today - timedelta(days=180)
 
-            today = date.today()
-            yesterday = today - timedelta(days=1)
-            six_months_ago = today - timedelta(days=180)
+                bbox_geometry = ee.Geometry.Rectangle(bbox_formatted)
 
-            bbox_geometry = ee.Geometry.Rectangle(bbox_formatted)
-
-            # Date format
-            start_date = six_months_ago.strftime('%Y-%m-%d')
-            end_date = yesterday.strftime('%Y-%m-%d')
-        
-            # Filter image collection
-            imgs_s2 = ee.ImageCollection('COPERNICUS/S2') \
-                .filterDate(start_date, end_date) \
-                .filterBounds(bbox_geometry) \
-                .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
-
-            # Select image
-            img = imgs_s2.sort('system:time_start', False).first()
+                # Date format
+                start_date = six_months_ago.strftime('%Y-%m-%d')
+                end_date = yesterday.strftime('%Y-%m-%d')
             
-            # Get metadata
-            metadata = img.getInfo()
+                # Filter image collection
+                imgs_s2 = ee.ImageCollection('COPERNICUS/S2') \
+                    .filterDate(start_date, end_date) \
+                    .filterBounds(bbox_geometry) \
+                    .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
 
-            geoprocess_id = geoprocess.id
-            additional_info = self.get_metadata(metadata, geoprocess_id)
+                # Select image
+                img = imgs_s2.sort('system:time_start', False).first()
+                
+                # Get metadata
+                metadata = img.getInfo()
 
-            # Clip the image
-            s2_clip = img.clip(bbox_geometry)
+                geoprocess_id = geoprocess.id
+                additional_info = self.get_metadata(metadata, geoprocess_id)
 
-            # Calculate NDVI
-            ndvi = s2_clip.expression("(nir-red)/(nir+red)", {
-                "nir": s2_clip.select("B8"),
-                "red": s2_clip.select("B3")
-            })
+                # Clip the image
+                s2_clip = img.clip(bbox_geometry)
 
-            palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F18555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']
+                # Calculate NDVI
+                ndvi = s2_clip.expression("(nir-red)/(nir+red)", {
+                    "nir": s2_clip.select("B8"),
+                    "red": s2_clip.select("B3")
+                })
 
-            # Export the image as a TIFF file
-            geemap.ee_export_image(ndvi.visualize(min=0, max=1, palette=palette), filename=output_file, scale=10, region=bbox_geometry, file_per_band=False)
+                palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F18555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']
 
-        else:
-            # Handle an invalid option here if needed
-            print("Funcionalidades de GEE en desarrollo")
+                # Export the image as a TIFF file
+                geemap.ee_export_image(ndvi.visualize(min=0, max=1, palette=palette), filename=output_file, scale=10, region=bbox_geometry, file_per_band=False)
 
-        # Replace with the actual filename generated by sam.show_anns
-        report_pdf_path = output_file.replace('.tif', '.pdf')
+            else:
+                # Handle an invalid option here if needed
+                print("Funcionalidades de GEE en desarrollo")
 
-        # Generate PDF
+            # Replace with the actual filename generated by sam.show_anns
+            report_pdf_path = output_file.replace('.tif', '.pdf')
 
-        report_instance = Report.objects.create(
-            geo_process=geoprocess,
-            title= title_file,
-            description= description_file
-        )
+            # Generate PDF
 
-        if is_segment:
-            additional_info = {
-                "Cantidad de Ocurrencias": cont_phrases,
-                "Bounding box": bbox,
-                "ID de Geoproceso": geoprocess.id,
-                "ID de Reporte": report_instance.id,
-                "Hora de Ejecución": time_ejecution,
-            }
-            self.generate_pdf_sam(output_file, title_file, report_pdf_path, additional_info)
-        else:
-            additional_info["ID de Reporte"] = report_instance.id
-            additional_info["Hora de Ejecución"] = time_ejecution
-            self.generate_pdf_index(output_file, title_file, report_pdf_path, additional_info, is_ndvi)
+            report_instance = Report.objects.create(
+                geo_process=geoprocess,
+                title= title_file,
+                description= description_file
+            )
 
-        # Save the report file to the media directory
-        with open(report_pdf_path, 'rb') as f:
-            report_pdf_content = File(f)
-            report_instance.file.save(os.path.basename(report_pdf_path), report_pdf_content)
+            if is_segment:
+                additional_info = {
+                    "Cantidad de Ocurrencias": cont_phrases,
+                    "Bounding box": bbox,
+                    "ID de Geoproceso": geoprocess.id,
+                    "ID de Reporte": report_instance.id,
+                    "Hora de Ejecución": time_ejecution,
+                }
+                self.generate_pdf_sam(output_file, title_file, report_pdf_path, additional_info)
+            else:
+                additional_info["ID de Reporte"] = report_instance.id
+                additional_info["Hora de Ejecución"] = time_ejecution
+                self.generate_pdf_index(output_file, title_file, report_pdf_path, additional_info, is_ndvi)
+
+            # Save the report file to the media directory
+            with open(report_pdf_path, 'rb') as f:
+                report_pdf_content = File(f)
+                report_instance.file.save(os.path.basename(report_pdf_path), report_pdf_content)
+            
+            # Send email
+            self.send_email(email, report_pdf_path, title_file, description_file)
+
+            new_layer = Layer(
+                geo_process=geoprocess, 
+                title=f'Layer de {title_file}',
+                description=description_file,
+                type_layer='Raster',
+                bbox=Polygon.from_bbox(bbox_formatted)
+            )
+            new_layer.save()
+
+            user_instancia = AppUser.objects.get(email=email)
+            current_datetime = datetime.now()
+
+            metadata = Metadata(
+                name=f'Metadata {title_file}',
+                description=description_file,
+                layer=new_layer,
+                keywords='',
+                source=source,
+                attribution='',
+                created_by=user_instancia,
+                creation_date=current_datetime,
+                zoom=''
+            )
+
+            metadata.save()
+            
+            geoprocess.status = 'Finalizado'
+            geoprocess.save()
+            print("Función asíncrona finalizada")
         
-        # Send email
-        #self.send_email(email, report_pdf_path, title_file, description_file)
-        
-        geoprocess.status = 'Finalizado'
-        geoprocess.save()
-        print("Función asíncrona finalizada")
+        except Exception as e:
+            print(e)
 
 
     def process_async(self, bbox, option, email, geoprocess):
