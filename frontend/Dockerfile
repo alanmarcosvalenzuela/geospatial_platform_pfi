@@ -1,8 +1,12 @@
 # build env
 FROM node:20.9.0-alpine as build
 WORKDIR /app
-COPY package*.json ./
-COPY . ./
+
+# Clone the GitHub repository
+RUN git clone https://github.com/alanmarcosvalenzuela/geospatial_platform_pfi.git .
+
+# Change the working directory to "frontend"
+WORKDIR /app/frontend
 
 RUN yarn add react-leaflet
 
