@@ -41,3 +41,11 @@ Este superusuario también se utiliza para acceder a la cuenta de correo electr�
 Para obtener  mejores resultados en los procesos de segmentación y detección, se recomienda seleccionar el área con el máximo nivel de zoom posible. Esto proporciona una mayor resolución y detalle, lo que mejora la precisión de los algoritmos.
 
 Por otro lado, para los cálculos de índices, se sugiere estar en un nivel de zoom sobre el mapa como se puede apreciar en los videos que se adjuntan con los respectivos ejemplos. Esto garantiza un equilibrio entre la resolución y la cobertura del área seleccionada, lo que es crucial para obtener mediciones precisas.
+
+
+## Requisitos de Hardware
+
+Antes de proceder con la instalación del proyecto, asegúrese de que su sistema cumpla con los siguientes requisitos de hardware:
+
+- **Memoria RAM:** Mínimo 18 GB de RAM.
+- **Almacenamiento:** Mínimo 20 GB de espacio disponible en disco.
