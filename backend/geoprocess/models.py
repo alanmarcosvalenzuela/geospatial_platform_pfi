@@ -1,6 +1,6 @@
 from django.conf import settings
-from django.contrib.gis.db import models
 from django.db import models
+from django.contrib.gis.db import models
 
 
 class GeoProcess(models.Model):

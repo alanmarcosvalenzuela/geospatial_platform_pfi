@@ -322,7 +322,7 @@ class Process(APIView):
                 title_file = 'Segmentación Automática de Construcciones'
                 description_file = 'Reporte describiendo los resultados de la segmentación de construcciones.'
                 sam.show_anns(
-                    cmap='Greys',  # Adjust the colormap as needed
+                    cmap='Accent_r', 
                     box_color='red',
                     title='',
                     output=output_file)
@@ -331,8 +331,8 @@ class Process(APIView):
                 is_ndvi = False
                 source = "GEE"
                 output_file = 'water.tif'
-                title_file = 'Índices de Clasificación de Volumen de Agua'
-                description_file = 'Reporte describiendo los resultados del índice de masa de agua.'
+                title_file = 'Índices de Clasificación de Cantidad de Agua en Superficie'
+                description_file = 'Reporte describiendo los resultados del índice de cantidad de agua.'
 
                 today = date.today()
                 yesterday = today - timedelta(days=1)

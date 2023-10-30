@@ -174,7 +174,7 @@ const Home = ({ userEmail }) => {
                 checked={selectedOption === 'construcciones_sam'}
                 onChange={() => setSelectedOption('construcciones_sam')}
               />
-              Construcciones
+              Tejados
             </label>
           </div>
           <div style={{ marginBottom: '20px' }}>
